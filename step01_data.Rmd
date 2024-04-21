@@ -171,6 +171,8 @@ for (j in regressors){
 ```
 
 ```{r}
+library(ggplot2)
+
 ggplot(df[, c('aaj6.2', 'aaj62')], aes(x = aaj6.2, y = aaj62)) +
   geom_boxplot(fill = "olivedrab3", outlier.color = "olivedrab2") +
   labs(y="", x = "Средняя продолжительность раб.недели") +
@@ -219,5 +221,5 @@ ggplot(df[, c('aaj6.2', 'aaj4.1')], aes(x = aaj6.2, y = aaj4.1)) +
 
 ```{r}
 df_numeric <- df[, -which(names(df) %in% cat_names)]
-summary(df_numeric)
+data.frame(summary(df_numeric))
 ```
