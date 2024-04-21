@@ -148,3 +148,76 @@ df[cat_names] <- lapply(df[cat_names], as.factor)
 ```{r}
 write.csv(df, 'workinghours_df.csv', row.names = FALSE)
 ```
+
+### Графики для Proposal
+Графики всех переменных
+```{r}
+regressors <- c('aaj4.1', 'aaj13.2', 'aaj21.3', 'aaj125.2',
+                'aah5', 'aa_age', 'aa_educ', 'aaj161.3y',
+                'aaj6', 'aaj6.0',
+                'aaj11', 'aaj11.1', 'aaj13', 'aaj23', 'aaj26',
+               
+                # оценки пропущенной переменной
+                'aaj72.171', 'aaj31', 
+                'aaj66.1', 'aaj62', 'aaj66', 'aaj61',
+                'aaj14', 'aaj15', 'aaj16', 'aaj81'
+               )
+for (j in regressors){
+  plot(df[,c(j, 'aaj6.2')],
+       #xlab=attr(df[, j], "label"),
+       #ylab=attr(df$aaj6.2, "label")
+       )
+}
+```
+
+```{r}
+ggplot(df[, c('aaj6.2', 'aaj62')], aes(x = aaj6.2, y = aaj62)) +
+  geom_boxplot(fill = "olivedrab3", outlier.color = "olivedrab2") +
+  labs(y="", x = "Средняя продолжительность раб.недели") +
+  # На какой из девяти ступеней богатства респондент считает, что находится
+  ggtitle("Распределение средней продолжительности рабочей недели\nв зависимости от того, на какой ступени богатства респондент\nсчитает, что находится") +
+  theme(axis.text.y = element_text(size = 6),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+        )
+```
+
+
+
+```{r}
+ggplot(df[, c('aaj6.2', 'aa_educ')], aes(x = aaj6.2, y = aa_educ)) +
+  geom_boxplot(fill = "mediumvioletred", outlier.color = "lightpink") +
+  labs(y="", x = "Средняя продолжительность раб.недели") +
+  ggtitle("Распределение средней продолжительности\nрабочей недели в зависимости от уровня\nобразования") +
+  theme(axis.text.y = element_text(size = 6),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+        ) +
+  scale_y_discrete(labels = dataset$aa_educ %>% 
+                     attr('labels') %>% 
+                     attr('names') %>% 
+                     as.character())
+```
+
+
+```{r}
+
+ggplot(df[, c('aaj6.2', 'aaj4.1')], aes(x = aaj6.2, y = aaj4.1)) +
+  geom_boxplot(fill = "lightblue3", outlier.color = "lightcyan3") +
+  labs(y="", x = "Средняя продолжительность раб.недели") +
+  ggtitle("Распределение средней продолжительности\nрабочей недели по отраслям") +
+  theme(axis.text.y = element_text(size = 6),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+        ) +
+  scale_y_discrete(labels = dataset$aaj4.1 %>% 
+                     attr('labels') %>% 
+                     attr('names') %>% 
+                     as.character())
+```
+
+
+```{r}
+df_numeric <- df[, -which(names(df) %in% cat_names)]
+summary(df_numeric)
+```
