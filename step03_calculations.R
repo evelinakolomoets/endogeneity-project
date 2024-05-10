@@ -5,7 +5,7 @@ df <- df[, -which(names(df) %in% c("aaj11"))]
 
 cat_names <- c(
   "aaj4.1", "aaj21.3", "aaj125.2", "aah5",
-  "aa_educ", "aaj6", "aaj11.1",
+  "aaj6", "aaj11.1",
   "aaj23", "aaj26", "aaj72.171", "aaj31",
   "aaj66.1", "aaj62", "aaj66", "aaj61", "aaj14", "aaj81"
 )
