@@ -1,6 +1,6 @@
 setwd("~/Documents/GitHub/endogeneity-project")
 
-df <- read.csv("workinghours_df.csv")
+df <- read.csv("step01_data/workinghours_df.csv")
 
 # удаляем переменную, которая принимает единственное значение
 df <- df[, -which(names(df) %in% c("aaj11"))]
