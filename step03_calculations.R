@@ -23,16 +23,20 @@ y <- df$aaj6.2
 
 ### МОДЕЛИ ###
 library(lmtest)
+library(sandwich)
 
 # МНК
 ols <- lm(y ~ ., data = X)
 ols_summary <- summary(ols)
 bptest(ols)$p.value > 0.05
+ols_test <- coeftest(ols, vcov = vcovHC(ols, type = 'HC0'))
 
 # МНК БЕЗ НЕКОТОРЫХ ПРИЗНАКОВ - ОТОБРАНЫ ПО КРИТЕРИЮ АКАИКЕ
 step_ols <- step(lm(y ~ ., data = X))
 step_ols_summary <- summary(step_ols)
 bptest(step_ols)$p.value > 0.05
+
+step_ols_test <- coeftest(step_ols, vcov = vcovHC(step_ols, type = 'HC0'))
 
 # ПРЕОБРАЗОВАНИЕ В МАТРИЧНЫЙ ВИД
 X_with_dummies <- X[, -which(names(X) %in% cat_names)]
@@ -77,6 +81,7 @@ X_selected <- X_selected[, -which(colnames(X_selected) %in% c("intercept"))]
 ols_lasso <- lm(y ~ ., data = data.frame(X_selected))
 summary(ols_lasso)
 bptest(ols_lasso)$p.value > 0.05
+ols_lasso_test <- coeftest(ols_lasso, vcov = vcovHC(ols_lasso, type = 'HC0'))
 
 # ММП
 library(maxLik)
@@ -105,7 +110,7 @@ ml_summary
 # ЭКСПОРТ РЕЗУЛЬТАТОВ
 library(stargazer)
 
-stargazer(ols, step_ols, ols_lasso,
+stargazer(ols_test, step_ols_test, ols_lasso_test,
           type = "latex",
           out = "models_summary.tex",
           digits = 3,
