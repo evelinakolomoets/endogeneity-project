@@ -1,3 +1,5 @@
+setwd("~/Documents/GitHub/endogeneity-project")
+
 df <- read.csv("workinghours_df.csv")
 
 # удаляем переменную, которая принимает единственное значение
@@ -25,46 +27,73 @@ y <- df$aaj6.2
 ols <- lm(y ~ ., data = X)
 ols_summary <- summary(ols)
 
-# ММП
-library(maxLik)
+# МНК БЕЗ НЕКОТОРЫХ ПРИЗНАКОВ - ОТОБРАНЫ ПО КРИТЕРИЮ АКАИКЕ
+step_lm <- step(lm(y ~ ., data = X))
+step_ols_summary <- summary(step_lm)
 
-X_with_dummies <- X[, -which(names(df) %in% cat_names)]
+# ПРЕОБРАЗОВАНИЕ В МАТРИЧНЫЙ ВИД
+X_with_dummies <- X[, -which(names(X) %in% cat_names)]
 X_with_dummies[] <- lapply(X_with_dummies, as.numeric)
 
 # преобразование factor колонок в OHE
 for (cat_col in cat_names) {
   level_names <- levels(X[[cat_col]])
-  dummy_matrix <- model.matrix(~ X[[cat_col]] - 1)
-
+  dummy_matrix <- model.matrix(~ X[[cat_col]])[,2:length(level_names)]
+  
   initial_ncol <- ncol(X_with_dummies)
   X_with_dummies <- cbind(X_with_dummies, dummy_matrix)
-
-  needed_colname <- paste(cat_col, "_", sep = "")
+  
   colnames(X_with_dummies)[
     (initial_ncol + 1):ncol(X_with_dummies)
-  ] <- paste(needed_colname, level_names, sep = "")
+  ] <- paste(cat_col, 
+             level_names[2:length(level_names)], 
+             sep = "")
+  
 }
 
-rm(cat_col, level_names, initial_ncol, needed_colname, dummy_matrix)
-
+rm(cat_col, level_names, initial_ncol, dummy_matrix)
 
 X_with_dummies <- cbind(intercept = 1, X_with_dummies)
 X_with_dummies <- as.matrix(X_with_dummies)
 
-likelihood <- function(param) {
+# МНК БЕЗ НЕКОТОРЫХ ПРИЗНАКОВ - ОТОБРАНЫ С ПОМОЩЬЮ LASSO
+library(glmnet)
+
+lasso_model <- glmnet(X_with_dummies, y, alpha = 1)
+
+cv_model <- cv.glmnet(X_with_dummies, y, alpha = 1)
+best_lambda <- cv_model$lambda.min
+
+coefficients <- coef(lasso_model, s = best_lambda)
+selected_variables <- na.omit(
+  colnames(X_with_dummies)[which(coefficients != 0)]
+  )
+
+X_selected <- X_with_dummies[, which(colnames(X_with_dummies) %in% selected_variables)]
+X_selected <- X_selected[, -which(colnames(X_selected) %in% c("intercept"))]
+lm_lasso <- lm(y ~ ., data = data.frame(X_selected))
+summary(lm_lasso)
+
+# ММП
+library(maxLik)
+y <- as.matrix(y)
+
+likelihood <- function(param, x) {
   beta <- param[-1]
   sigma <- param[1]
-  mu <- X_with_dummies %*% beta
-  sum(dnorm(y, mu, sigma, log = TRUE))
+  mu <- x %*% beta
+  sum(dnorm(x, mu, sigma, log = TRUE))
 }
 
 init_vars <- setNames(rep(0, ncol(X_with_dummies)), colnames(X_with_dummies))
 
 ml <- maxLik(likelihood,
-  start = c(
-    sigma = sd(y),
-    init_vars
-  )
+             start = c(sigma = sd(y),
+                       init_vars
+                       ),
+             x = X_with_dummies,
+             method = "BFGSR"
 )
 
 ml_summary <- summary(ml)
+ml_summary
