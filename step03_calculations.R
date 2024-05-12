@@ -28,8 +28,8 @@ ols <- lm(y ~ ., data = X)
 ols_summary <- summary(ols)
 
 # МНК БЕЗ НЕКОТОРЫХ ПРИЗНАКОВ - ОТОБРАНЫ ПО КРИТЕРИЮ АКАИКЕ
-step_lm <- step(lm(y ~ ., data = X))
-step_ols_summary <- summary(step_lm)
+step_ols <- step(lm(y ~ ., data = X))
+step_ols_summary <- summary(step_ols)
 
 # ПРЕОБРАЗОВАНИЕ В МАТРИЧНЫЙ ВИД
 X_with_dummies <- X[, -which(names(X) %in% cat_names)]
@@ -71,8 +71,8 @@ selected_variables <- na.omit(
 
 X_selected <- X_with_dummies[, which(colnames(X_with_dummies) %in% selected_variables)]
 X_selected <- X_selected[, -which(colnames(X_selected) %in% c("intercept"))]
-lm_lasso <- lm(y ~ ., data = data.frame(X_selected))
-summary(lm_lasso)
+ols_lasso <- lm(y ~ ., data = data.frame(X_selected))
+summary(ols_lasso)
 
 # ММП
 library(maxLik)
@@ -92,8 +92,18 @@ ml <- maxLik(likelihood,
                        init_vars
                        ),
              x = X_with_dummies,
-             method = "BFGSR"
+             method = "CG"
 )
 
 ml_summary <- summary(ml)
 ml_summary
+
+# ЭКСПОРТ РЕЗУЛЬТАТОВ
+library(stargazer)
+
+stargazer(ols, step_ols, ols_lasso,
+          type = "latex",
+          out = "models_summary.tex",
+          digits = 3,
+          title = "Models Summary",
+          notes.align = 'r')
