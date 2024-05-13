@@ -1,4 +1,4 @@
-setwd("~/Documents/GitHub/endogeneity-project")
+setwd("~/Documents/GitHub/endogeneity-project/")
 
 df <- read.csv("step01_data/workinghours_df.csv")
 
@@ -91,28 +91,38 @@ likelihood <- function(param, x) {
   beta <- param[-1]
   sigma <- param[1]
   mu <- x %*% beta
-  sum(dnorm(x, mu, sigma, log = TRUE))
+  sum(dnorm(y, mu, sigma, log = TRUE))
 }
 
-init_vars <- setNames(rep(0, ncol(X_with_dummies)), colnames(X_with_dummies))
+# init_vars <- setNames(rep(0, ncol(X_with_dummies)), colnames(X_with_dummies))
 
 ml <- maxLik(likelihood,
-             start = c(sigma = sd(y),
-                       init_vars
-                       ),
-             x = X_with_dummies,
-             method = "CG"
+              start = c(sigma = sd(y),
+                        ols$coefficients
+              ),
+              x = X_with_dummies,
+              method = "CG"
 )
-
 ml_summary <- summary(ml)
 ml_summary
 
 # ЭКСПОРТ РЕЗУЛЬТАТОВ
 library(stargazer)
-
-stargazer(ols_test, step_ols_test, ols_lasso_test,
+stargazer(ols_test, step_ols_test, ols_lasso_test, 
           type = "latex",
           out = "models_summary.tex",
+          digits = 3,
+          title = "Models Summary",
+          notes.align = 'r')
+
+library(texreg)
+
+htmlreg(ml, stars=c(0.01, 0.05, 0.1), file='ml.html')
+
+
+stargazer(ols_test, step_ols_test, ols_lasso_test, 
+          type = "html",
+          out = "models_summary.html",
           digits = 3,
           title = "Models Summary",
           notes.align = 'r')
